@@ -1,29 +1,62 @@
 package com.algaworks.osworks.osworksapi.api.controller;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.algaworks.osworks.osworksapi.domain.model.Cliente;
+import com.algaworks.osworks.osworksapi.domain.repository.ClienteRepository;
 
 @RestController
+@RequestMapping("/clientes")
 public class ClienteController {
 
-	@GetMapping("/clientes")
+	@Autowired
+	private ClienteRepository clienteRepository;
+
+	@GetMapping
 	public List<Cliente> listar() {
-		var cliente = new Cliente();
-		cliente.setId(1L);
-		cliente.setNome("Testonildo das couve da silva");
-		cliente.setEmail("Testonildo@teste.com.br");
-		cliente.setTelefone("0000-0000");
-		var cliente2 = new Cliente();
-		cliente2.setId(2L);
-		cliente2.setNome("Julio");
-		cliente2.setEmail("teste@teste.com.br");
-		cliente2.setTelefone("1111-0000");
-		
-		return Arrays.asList(cliente,cliente2);
+		return clienteRepository.findAll();
 	}
+	
+	@GetMapping("/{clienteId}")
+	public ResponseEntity<Cliente> buscar(@PathVariable Long clienteId) {
+		Optional<Cliente> cliente = clienteRepository.findById(clienteId);
+		
+		if(cliente.isPresent()) {
+			return ResponseEntity.ok(cliente.get());
+		}
+		
+		return ResponseEntity.notFound().build();
+	}
+	
+	@PostMapping
+	@ResponseStatus(HttpStatus.CREATED)
+	public Cliente adicionar(@RequestBody Cliente cliente) {
+		return clienteRepository.save(cliente);
+	}
+	
+	@PutMapping("/{clienteId}")
+	public ResponseEntity<Cliente> atualizar(@PathVariable Long clienteId, @RequestBody Cliente cliente){
+		
+		if(!clienteRepository.existsById(clienteId)) {
+			return ResponseEntity.notFound().build();
+		}
+		cliente.setId(clienteId);
+		cliente = clienteRepository.save(cliente);
+		return ResponseEntity.ok(cliente);
+	}
+	 
 }
